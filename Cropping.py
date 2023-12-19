@@ -5,6 +5,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
+from MicroscopeImage import MicroscopeImage
 
 class Image_Cropper():
     def __init__(self, model_weights : str) -> None:
@@ -66,4 +67,9 @@ class Image_Cropper():
 
             # save the list of crops for later evaluation 
             crops.append(cv2.cvtColor(cropped_image, cv2.COLOR_RGB2GRAY))
-        return crops
+        
+        microscope_image_crops = [MicroscopeImage() for _ in range(len(crops))]
+        for i, crop in enumerate(crops):
+            microscope_image_crops[i].set_image_tensor(crop)
+
+        return microscope_image_crops
