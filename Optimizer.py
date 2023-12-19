@@ -88,7 +88,7 @@ def main():
     optimizer = Optimizer(
         clarity_metric=DummyClarityMetric,
         microscope_controller=DummyMicroscopeController(),
-        lr=0.1
+        lr=1
     )
     optimized_image = optimizer.start()
     cv2.imshow("optimized image", optimized_image)
