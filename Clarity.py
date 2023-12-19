@@ -1,13 +1,16 @@
 import cv2
 import os
 import numpy as np
+from scipy.stats import hmean,gmean
 import math
+from multiprocessing import Pool
 
 def brenner(img):
     '''
     :param img:narray             the clearer the image,the larger the return value
     :return: float 
     '''
+    img = img.get_image_tensor()
     shape = np.shape(img)
     
     out = 0
@@ -16,11 +19,54 @@ def brenner(img):
             
             out+=(int(img[x+2,y])-int(img[x,y]))**2
             
-    return out
+    max_brenner_value = 255**2 * img.size  # This is an approximation
+    normalized_brenner_value = out / max_brenner_value
+
+    return normalized_brenner_value
 
 def Laplacian(img):
+    # Calculate the Laplacian value
+    img = img.get_image_tensor()
+    laplacian_value = cv2.Laplacian(img, cv2.CV_64F).var()
     
-    return cv2.Laplacian(img,cv2.CV_64F).var()
+    # Normalize the Laplacian value
+    max_laplacian_value = 255**2  # This is an approximation
+    normalized_laplacian_value = laplacian_value / max_laplacian_value
+
+    return normalized_laplacian_value
+
+def calculate_metric(metric, img):
+    return metric(img)
+
+def harmonic_mean(img):
+    img = img.get_image_tensor()
+    metrics = [brenner, Laplacian, SMD, SMD2, variance, energy, Vollath, Tenengrad, entropy]
+    pool = Pool()
+    results = [pool.apply(calculate_metric, args=(metric, img)) for metric in metrics]
+    pool.close()
+    pool.join()
+
+    return hmean(results)
+
+def geometric_mean(img):
+    img = img.get_image_tensor()
+    metrics = [brenner, Laplacian, SMD, SMD2, variance, energy, Vollath, Tenengrad, entropy]
+    pool = Pool()
+    results = [pool.apply(calculate_metric, args=(metric, img)) for metric in metrics]
+    pool.close()
+    pool.join()
+
+    return gmean(results)
+
+def arithmetic_mean(img):
+    img = img.get_image_tensor()
+    metrics = [brenner, Laplacian, SMD, SMD2, variance, energy, Vollath, Tenengrad, entropy]
+    pool = Pool()
+    results = [pool.apply(calculate_metric, args=(metric, img)) for metric in metrics]
+    pool.close()
+    pool.join()
+
+    return np.mean(results)
 
 def SMD(img):
     
@@ -30,7 +76,12 @@ def SMD(img):
         for x in range(0, shape[0]-1):
             out+=math.fabs(int(img[x,y])-int(img[x,y-1]))
             out+=math.fabs(int(img[x,y]-int(img[x+1,y])))
-    return out
+
+    # Normalize the SMD value
+    max_smd_value = 255 * img.size  # This is an approximation
+    normalized_smd_value = out / max_smd_value
+
+    return normalized_smd_value
 
 def SMD2(img):
     
@@ -39,7 +90,11 @@ def SMD2(img):
     for y in range(0, shape[1]-1):
         for x in range(0, shape[0]-1):
             out+=math.fabs(int(img[x,y])-int(img[x+1,y]))*math.fabs(int(img[x,y]-int(img[x,y+1])))
-    return out
+    
+    max_smd_value = 255 * img.size  # This is an approximation
+    normalized_smd_value = out / max_smd_value
+
+    return normalized_smd_value
 
 def variance(img):
     
@@ -49,7 +104,11 @@ def variance(img):
     for y in range(0,shape[1]):
         for x in range(0,shape[0]):
             out+=(img[x,y]-u)**2
-    return out
+
+    max_variance_value = 255**2  # This is an approximation
+    normalized_variance_value = out / max_variance_value
+
+    return normalized_variance_value
 
 def energy(img):
  
@@ -86,7 +145,8 @@ def entropy(img):
             h = h - (hb[i, 0])*math.log(hb[i, 0],2)
                 
     out = h
-    return out
+    max_entropy_value = np.log2(256)
+    return out / max_entropy_value
 
 def Tenengrad(image):
     '''
@@ -102,7 +162,9 @@ def Tenengrad(image):
     sobel_yy = cv2.multiply(sobel_y,sobel_y)
     image_gradient = sobel_xx + sobel_yy
     image_gradient = np.sqrt(image_gradient).mean()
-    return image_gradient
+
+    max_tenengrad_value = 255**2  # This is an approximation
+    return image_gradient / max_tenengrad_value
 
 def LinearClarityMetric(crops, metric_name):
     

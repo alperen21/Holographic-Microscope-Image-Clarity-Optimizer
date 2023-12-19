@@ -1,17 +1,15 @@
 from Microscope import DummyMicroscopeController
 from Clarity import DummyClarityMetric
-from Cropping import Image_Cropper
 import cv2
 
 class Optimizer:
-    def __init__(self, image_cropper, clarity_metric, microscope_controller, lr=0.01):
+    def __init__(self, clarity_metric, microscope_controller, lr=0.01):
         """
         clarity_metric: function that takes in an image and returns a clarity score
         microscope_controller: object that controls the microscope
         lr: learning rate
         """
         self.lr = lr
-        self.image_cropper = image_cropper
         self.clarity_metric = clarity_metric
         self.microscope_controller = microscope_controller
 
@@ -63,14 +61,12 @@ class Optimizer:
         """
         previous_clarity = float('-inf')
         image = self.microscope_controller.get_image()
-        cropped_cells = self.image_cropper.crop(image)
-        current_clarity = self.clarity_metric(cropped_cells)
+        current_clarity = self.clarity_metric(image)
 
 
         while not self.convergence_check(previous_clarity, current_clarity):
             print("image focus:", self.microscope_controller.get_current_focus())
             print("previous clarity:", previous_clarity)
-            print("cell number:", len(cropped_cells))
             print("clarity:", current_clarity)
             gradient = self.gradient(current_clarity)
             print("gradient:", gradient)
@@ -90,10 +86,9 @@ class Optimizer:
     
 def main():
     optimizer = Optimizer(
-        image_cropper=Image_Cropper(),
         clarity_metric=DummyClarityMetric,
         microscope_controller=DummyMicroscopeController(),
-        lr=1
+        lr=0.1
     )
     optimized_image = optimizer.start()
     cv2.imshow("optimized image", optimized_image)
@@ -103,7 +98,6 @@ if __name__ == "__main__":
     main()
         
         
-
 
 
 

@@ -30,7 +30,7 @@ class MicroscopeController(ABC):
 class DummyMicroscopeController(MicroscopeController):
     def __init__(self) -> None:
         super().__init__()
-        self.image_focuses = [-3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0 , 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+        self.image_focuses = [-3.0, -2.5, -2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0, 2.5, 3.0]
         self.image_idx = random.randint(1, len(self.image_focuses)-2) #important this should not start with either of the extremes
         self.image = DummyMicroscopeImage(
             img_focus=self.image_focuses[self.image_idx],
