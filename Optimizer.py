@@ -1,5 +1,5 @@
 from Microscope import DummyMicroscopeController
-from Clarity import DummyClarityMetric
+from Clarity import DummyClarityMetric, LaplacianClarityMetric
 import cv2
 
 class Optimizer:
@@ -85,8 +85,9 @@ class Optimizer:
         return self.microscope_controller.get_image().get_image_tensor()
     
 def main():
+    laplacianClarityMetric = LaplacianClarityMetric(model_weights="yolov8n.pt")
     optimizer = Optimizer(
-        clarity_metric=DummyClarityMetric,
+        clarity_metric=laplacianClarityMetric,
         microscope_controller=DummyMicroscopeController(),
         lr=1
     )

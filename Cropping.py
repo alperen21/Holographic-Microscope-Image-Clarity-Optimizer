@@ -26,6 +26,7 @@ class Image_Cropper():
         image_path: path to the input image
         save_path: path to save the cropped image
         """
+        input_image = input_image.get_image_tensor()
         height = input_image.shape[0]
         width = input_image.shape[1]   
 

@@ -28,8 +28,10 @@ class MicroscopeController(ABC):
         return num_steps * self.step_size
 
 class DummyMicroscopeController(MicroscopeController):
-    def __init__(self) -> None:
+    def __init__(self, token="haydarpasa", folder="dummy_images") -> None:
         super().__init__()
+        self.token = token
+        self.folder = folder
         self.image_focuses = [-3.0, -2.5, -2.0, -1.0, -1.5, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
         self.image_idx = random.randint(1, len(self.image_focuses)-2) #important this should not start with either of the extremes
         self.image = DummyMicroscopeImage(
@@ -42,9 +44,9 @@ class DummyMicroscopeController(MicroscopeController):
     
     def get_image_path(self):
         if self.image_focuses[self.image_idx] < 0.0:
-            return os.path.join("dummy_images", f"haydarpasa{self.image_focuses[self.image_idx]}.jpg")
+            return os.path.join(self.folder, f"{self.token}{self.image_focuses[self.image_idx]}.jpg")
         else:
-            return os.path.join("dummy_images", f"haydarpasa+{self.image_focuses[self.image_idx]}.jpg")
+            return os.path.join(self.folder, f"{self.token}+{self.image_focuses[self.image_idx]}.jpg")
     
     def move(self, move_amount):
         move_amount = super().discretize_move(move_amount)
@@ -67,6 +69,11 @@ class DummyMicroscopeController(MicroscopeController):
     def get_image(self):
         return self.image
     
+
+class DummyCropMicroscopeController(DummyMicroscopeController):
+    def __init__(self) -> None:
+        super().__init__(token="input", folder="dummy_crop_images")
+
 if __name__ == "__main__":
     controller = DummyMicroscopeController()
 

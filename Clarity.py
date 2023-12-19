@@ -1,9 +1,179 @@
+from typing import Any
 import cv2
 import os
 import numpy as np
 from scipy.stats import hmean,gmean
 import math
 from multiprocessing import Pool
+from abc import ABC, abstractclassmethod
+from Cropping import Image_Cropper
+
+class LinearClarityMetric(ABC):
+    def __init__(self, model_weights) -> None:
+        self.image_cropper = Image_Cropper(model_weights)
+
+    def crop(self, image):
+        return self.image_cropper.crop(image, "results", save=False)
+    
+    @abstractclassmethod
+    def calculate_clarity(self, image):
+        pass 
+    
+    @abstractclassmethod
+    def get_max_value(self):
+        pass
+
+    def get_clarity(self, image):
+        crops = self.crop(image)
+
+        if len(crops) == 0:
+            return 0
+        
+        clarity_score = 0
+        for crop in crops:
+            clarity_score += self.calculate_clarity(crop)
+        
+        average_clarity = clarity_score/len(crops)
+        return average_clarity
+
+    def get_normalized_clarity(self, image):
+        crops = self.crop(image)
+        
+        clarity_score = 0
+
+        if len(crops) == 0:
+            return 0
+        for crop in crops:
+            score = self.calculate_clarity(crop) / self.get_max_value()
+            clarity_score += score
+        
+        average_clarity = clarity_score/len(crops)
+        return average_clarity
+    
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        return self.get_clarity(*args, **kwds)
+
+class LaplacianClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+
+    def calculate_clarity(self, image):
+        return Laplacian(image)
+
+    def get_max_value(self):
+        return 255**2
+    
+class BrennerClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+
+    def calculate_clarity(self, image):
+        return brenner(image)
+
+    def get_max_value(self):
+        return 255**2
+
+class SMDClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+
+    def calculate_clarity(self, image):
+        return SMD(image)
+
+    def get_max_value(self):
+        return 255
+
+class SMD2ClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+
+    def calculate_clarity(self, image):
+        return SMD2(image)
+
+    def get_max_value(self):
+        return 255
+    
+class VarianceClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+
+    def calculate_clarity(self, image):
+        return variance(image)
+
+    def get_max_value(self):
+        return 255**2
+
+class EnergyClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+
+    def calculate_clarity(self, image):
+        return energy(image)
+
+    def get_max_value(self):
+        return 255**2
+
+class VollathClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+
+    def calculate_clarity(self, image):
+        return Vollath(image)
+
+    def get_max_value(self):
+        return 255**2
+
+class EntropyClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+
+    def calculate_clarity(self, image):
+        return entropy(image)
+
+    def get_max_value(self):
+        return np.log2(256)
+
+class TenengradClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+
+    def calculate_clarity(self, image):
+        return Tenengrad(image)
+
+    def get_max_value(self):
+        return 255**2
+
+class HarmonicMeanClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+    
+    def calculate_clarity(self, image):
+        return harmonic_mean(image)
+
+    def get_max_value(self):
+        return 1
+
+class GeometricMeanClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+    
+    def calculate_clarity(self, image):
+        return geometric_mean(image)
+
+    def get_max_value(self):
+        return 1
+
+class ArithmeticMeanClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+    
+    def calculate_clarity(self, image):
+        return arithmetic_mean(image)
+
+    def get_max_value(self):
+        return 1
+
+
 
 def brenner(img):
     '''
