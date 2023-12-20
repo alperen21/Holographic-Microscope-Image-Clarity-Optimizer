@@ -7,6 +7,18 @@ import math
 from multiprocessing import Pool
 from abc import ABC, abstractclassmethod
 from cropping.Cropping import Image_Cropper
+import torch
+import torchvision.models as models
+import torch.nn as nn
+
+
+clarity_model = models.resnet18(pretrained=False)
+# Modify the last fully connected layer for your specific task
+num_ftrs = clarity_model.fc.in_features
+clarity_model.fc = nn.Linear(num_ftrs, 1)  # Assuming the output feature size is 1
+
+clarity_model.load_state_dict(torch.load('clarity_model.pt'))
+
 
 class LinearClarityMetric(ABC):
     def __init__(self, model_weights) -> None:
@@ -52,6 +64,18 @@ class LinearClarityMetric(ABC):
     
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         return self.get_clarity(*args, **kwds)
+
+class ConvolutionalClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+
+    def calculate_clarity(self, image):
+        global clarity_model
+        image = image.get_image_tensor()
+        return clarity_model(image)
+
+    def get_max_value(self):
+        return 10
 
 class LaplacianClarityMetric(LinearClarityMetric):
     def __init__(self, model_weights) -> None:

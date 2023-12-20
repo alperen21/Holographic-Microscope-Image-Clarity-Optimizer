@@ -5,7 +5,7 @@ import cv2
 from microscope.MicroscopeImage import DummyMicroscopeImage, MicroscopeImage
 import math
 import numpy as np
-import requests
+# import requests
 
 class MicroscopeController(ABC):
 
