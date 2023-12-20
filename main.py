@@ -1,5 +1,5 @@
 from optimization.Optimizer import Optimizer
-from clarity.Clarity import LaplacianClarityMetric
+from clarity.Clarity import LaplacianClarityMetric, ConvolutionalClarityMetric
 from microscope.Microscope import DummyCropMicroscopeController
 
 def main():

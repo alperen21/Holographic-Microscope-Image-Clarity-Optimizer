@@ -10,6 +10,11 @@ from cropping.Cropping import Image_Cropper
 import torch
 import torchvision.models as models
 import torch.nn as nn
+from torchvision.transforms import Compose, Resize, Normalize
+from torchvision.transforms.functional import convert_image_dtype
+from PIL import Image
+
+
 
 
 clarity_model = models.resnet18(pretrained=False)
@@ -68,10 +73,25 @@ class LinearClarityMetric(ABC):
 class ConvolutionalClarityMetric(LinearClarityMetric):
     def __init__(self, model_weights) -> None:
         super().__init__(model_weights)
+        self.transform = Compose([
+            Resize((224, 224), antialias=True),
+            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
 
     def calculate_clarity(self, image):
         global clarity_model
         image = image.get_image_tensor()
+        if len(image.shape) == 2:
+            # Add a channel dimension (HxW -> HxWx1)
+            image = np.expand_dims(image, axis=2)
+            image = np.repeat(image, 3, axis=2)
+        image = torch.from_numpy(image).permute(2, 0, 1)  
+        image = convert_image_dtype(image, dtype=torch.float32)
+
+        # image = convert_image_dtype(image, dtype=torch.float)
+        image = self.transform(image)
+        image = image.unsqueeze(0)  # Add a batch dimension
+
         return clarity_model(image)
 
     def get_max_value(self):
