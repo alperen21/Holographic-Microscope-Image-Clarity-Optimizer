@@ -11,8 +11,7 @@ def main():
         lr=1
     )
     optimized_image = optimizer.start()
-    cv2.imshow("optimized image", optimized_image)
-    cv2.waitKey(0)
+    print("optimized image clarity:", laplacian(optimized_image))
 
 if __name__ == "__main__":
     main()
