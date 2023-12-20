@@ -1,13 +1,13 @@
 from Optimizer import Optimizer
-from Clarity import LaplacianClarityMetric
-from Microscope import RestMicroscopeController
+from Clarity import DummyClarityMetric, LaplacianClarityMetric
+from Microscope import DummyMicroscopeController, DummyCropMicroscopeController
 import cv2
 
 def main():
     laplacian = LaplacianClarityMetric("yolov8n.pt")
     optimizer = Optimizer(
         clarity_metric= laplacian,
-        microscope_controller=RestMicroscopeController(),
+        microscope_controller=DummyCropMicroscopeController(),
         lr=1
     )
     optimized_image = optimizer.start()
