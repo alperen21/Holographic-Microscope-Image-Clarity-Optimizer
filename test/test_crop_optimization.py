@@ -1,6 +1,7 @@
 from optimization.Optimizer import Optimizer
-from clarity.Clarity import LaplacianClarityMetric
-from microscope.Microscope import DummyCropMicroscopeController
+from Clarity import DummyClarityMetric, LaplacianClarityMetric
+from Microscope import DummyMicroscopeController, DummyCropMicroscopeController
+import cv2
 
 def main():
     laplacian = LaplacianClarityMetric("yolov8n.pt")
@@ -10,7 +11,8 @@ def main():
         lr=1
     )
     optimized_image = optimizer.start()
-    print("optimized image clarity:", laplacian(optimized_image))
+    cv2.imshow("optimized image", optimized_image)
+    cv2.waitKey(0)
 
 if __name__ == "__main__":
     main()
