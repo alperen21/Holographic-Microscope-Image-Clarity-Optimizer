@@ -6,8 +6,7 @@ import cv2
 def main():
     laplacian = LaplacianClarityMetric("yolov8n.pt")
     optimizer = Optimizer(
-        clarity_metric= laplacian
-,
+        clarity_metric= laplacian,
         microscope_controller=DummyCropMicroscopeController(),
         lr=1
     )
