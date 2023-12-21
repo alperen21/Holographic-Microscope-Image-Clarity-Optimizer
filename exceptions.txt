@@ -1,0 +1,46 @@
+BrennerClarityMetric only length-1 arrays can be converted to Python scalars
+SMDClarityMetric tuple index out of range
+SMD2ClarityMetric tuple index out of range
+VarianceClarityMetric unsupported operand type(s) for /: 'MicroscopeImage' and 'int'
+EnergyClarityMetric tuple index out of range
+VollathClarityMetric unsupported operand type(s) for /: 'MicroscopeImage' and 'int'
+EntropyClarityMetric 'MicroscopeImage' object has no attribute 'shape'
+TenengradClarityMetric 'MicroscopeImage' object has no attribute 'shape'
+LaplacianClarityMetric division by zero
+BrennerClarityMetric division by zero
+ConvolutionalClarityMetric division by zero
+SMDClarityMetric division by zero
+SMD2ClarityMetric division by zero
+VarianceClarityMetric division by zero
+EnergyClarityMetric division by zero
+VollathClarityMetric division by zero
+EntropyClarityMetric division by zero
+TenengradClarityMetric division by zero
+LaplacianClarityMetric division by zero
+BrennerClarityMetric division by zero
+ConvolutionalClarityMetric division by zero
+SMDClarityMetric division by zero
+SMD2ClarityMetric division by zero
+VarianceClarityMetric division by zero
+EnergyClarityMetric division by zero
+VollathClarityMetric division by zero
+EntropyClarityMetric division by zero
+TenengradClarityMetric division by zero
+LaplacianClarityMetric division by zero
+LaplacianClarityMetric OpenCV(4.8.1) /Users/runner/work/opencv-python/opencv-python/opencv/modules/imgproc/src/deriv.cpp:792: error: (-215:Assertion failed) !_src.empty() in function 'Laplacian'
+
+BrennerClarityMetric only length-1 arrays can be converted to Python scalars
+SMDClarityMetric tuple index out of range
+SMDClarityMetric tuple index out of range
+SMDClarityMetric tuple index out of range
+SMDClarityMetric tuple index out of range
+VarianceClarityMetric unsupported operand type(s) for /: 'MicroscopeImage' and 'int'
+VarianceClarityMetric only length-1 arrays can be converted to Python scalars
+EnergyClarityMetric tuple index out of range
+EnergyClarityMetric tuple index out of range
+EnergyClarityMetric tuple index out of range
+EnergyClarityMetric tuple index out of range
+VollathClarityMetric unsupported operand type(s) for /: 'MicroscopeImage' and 'int'
+VollathClarityMetric only length-1 arrays can be converted to Python scalars
+EntropyClarityMetric 'MicroscopeImage' object has no attribute 'shape'
+EntropyClarityMetric too many values to unpack (expected 2)

@@ -26,11 +26,15 @@ clarity_model.load_state_dict(torch.load('clarity_model.pt'))
 
 
 class LinearClarityMetric(ABC):
-    def __init__(self, model_weights) -> None:
+    def __init__(self, model_weights, crop=False) -> None:
         self.image_cropper = Image_Cropper(model_weights)
+        self.crop_images = crop
 
     def crop(self, image):
-        return self.image_cropper.crop(image, "results", save=False)
+        if self.crop_images:
+            return self.image_cropper.crop(image, "results", save=False)
+        else:
+            return [image]
     
     @abstractclassmethod
     def calculate_clarity(self, image):
@@ -230,14 +234,13 @@ def brenner(img):
     out = 0
     for y in range(0, shape[1]):
         for x in range(0, shape[0]-2):
-            
-            out+=(int(img[x+2,y])-int(img[x,y]))**2
+            for c in range(shape[2]):  # Loop over each channel
+                out+=(int(img[x+2,y,c])-int(img[x,y,c]))**2
             
     max_brenner_value = 255**2 * img.size  # This is an approximation
     normalized_brenner_value = out / max_brenner_value
 
     return normalized_brenner_value
-
 def Laplacian(img):
     # Calculate the Laplacian value
     img = img.get_image_tensor()
@@ -286,10 +289,8 @@ def SMD(img):
     
     shape = np.shape(img)
     out = 0
-    for y in range(0, shape[1]-1):
-        for x in range(0, shape[0]-1):
-            out+=math.fabs(int(img[x,y])-int(img[x,y-1]))
-            out+=math.fabs(int(img[x,y]-int(img[x+1,y])))
+    for x in range(0, shape[0]-2):
+        out+=math.fabs(int(img[x])-int(img[x-1]))
 
     # Normalize the SMD value
     max_smd_value = 255 * img.size  # This is an approximation
@@ -301,7 +302,7 @@ def SMD2(img):
     
     shape = np.shape(img)
     out = 0
-    for y in range(0, shape[1]-1):
+    for y in range(0, shape[0]-1):
         for x in range(0, shape[0]-1):
             out+=math.fabs(int(img[x,y])-int(img[x+1,y]))*math.fabs(int(img[x,y]-int(img[x,y+1])))
     
@@ -311,30 +312,28 @@ def SMD2(img):
     return normalized_smd_value
 
 def variance(img):
-    
-    out = 0
+    img = img.get_image_tensor()
     u = np.mean(img)
-    shape = np.shape(img)
-    for y in range(0,shape[1]):
-        for x in range(0,shape[0]):
-            out+=(img[x,y]-u)**2
-
+    variance_value = np.var(img)
     max_variance_value = 255**2  # This is an approximation
-    normalized_variance_value = out / max_variance_value
-
+    normalized_variance_value = variance_value / max_variance_value
     return normalized_variance_value
 
 def energy(img):
  
     shape = np.shape(img)
     out = 0
-    for y in range(0, shape[1]-1):
-        for x in range(0, shape[0]-1):
-            out+=((int(img[x+1,y])-int(img[x,y]))**2)*((int(img[x,y+1]-int(img[x,y])))**2)
+    for x in range(0, shape[0]-2):
+        out+=((int(img[x+1])-int(img[x]))**2)*((int(img[x+2])-int(img[x]))**2)
     return out
 
 def Vollath(img):
-  
+    
+    img = img.get_image_tensor()
+    
+    # Convert img to grayscale if it is a color image
+    if len(img.shape) == 3:
+        img = np.mean(img, axis=2)
     
     shape = np.shape(img)
     u = np.mean(img)
@@ -346,7 +345,14 @@ def Vollath(img):
 
 def entropy(img):
 
-    [rows, cols] = img.shape
+    img = img.get_image_tensor()
+
+    if len(img.shape) == 3:
+        rows, cols, _ = img.shape
+    else:
+        rows, cols = img.shape
+
+    # [rows, cols] = img.shape
     h = 0
     hist_gray = cv2.calcHist([img],[0],None,[256],[0.0,255.0])
     # hn valueis not correct
@@ -368,6 +374,7 @@ def Tenengrad(image):
     :param image:
     :return:
     '''
+    image = image.get_image_tensor()
     assert image is not None
     gray_image = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
     sobel_x = cv2.Sobel(gray_image,cv2.CV_32FC1,1,0)
