@@ -13,6 +13,7 @@ import torch.nn as nn
 from torchvision.transforms import Compose, Resize, Normalize
 from torchvision.transforms.functional import convert_image_dtype
 from PIL import Image
+from tensorflow.keras.models import load_model, Model
 
 
 
@@ -73,6 +74,32 @@ class LinearClarityMetric(ABC):
     
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         return self.get_clarity(*args, **kwds)
+
+
+class KerasClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+        self.model = load_model("focused_unfocused_model.h5")
+    
+    def calculate_clarity(self, image):
+        image = image.get_image_tensor()
+        image = cv2.resize(image, (224, 224))
+        image = np.expand_dims(image, axis=0)
+        image = image / 255.0
+
+
+        layer_name = self.model.layers[-1].name  # Name of the last layer
+        intermediate_model = Model(inputs=self.model.input, outputs=self.model.get_layer(layer_name).output)
+        activations = intermediate_model.predict(image)
+
+        first_values = activations[:, 0] 
+
+        return first_values[0]
+
+    
+    def get_max_value(self):
+        return 1
+
 
 class ConvolutionalClarityMetric(LinearClarityMetric):
     def __init__(self, model_weights) -> None:

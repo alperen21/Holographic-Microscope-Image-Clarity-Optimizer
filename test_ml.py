@@ -1,4 +1,4 @@
-from clarity.Clarity import ConvolutionalClarityMetric, LaplacianClarityMetric, BrennerClarityMetric, SMDClarityMetric, SMD2ClarityMetric, VarianceClarityMetric, EnergyClarityMetric, VollathClarityMetric, EntropyClarityMetric,TenengradClarityMetric
+from clarity.Clarity import KerasClarityMetric,ConvolutionalClarityMetric, LaplacianClarityMetric, BrennerClarityMetric, SMDClarityMetric, SMD2ClarityMetric, VarianceClarityMetric, EnergyClarityMetric, VollathClarityMetric, EntropyClarityMetric,TenengradClarityMetric
 from microscope.Microscope import MicroscopeImage
 import os 
 
@@ -21,7 +21,7 @@ def test_metric(clarityMetric):
     images = {
         "-5":[],
         "-3":[],
-        "ref":[],
+        "focused":[],
         "+3":[],
         "+5":[],
     }
@@ -29,13 +29,13 @@ def test_metric(clarityMetric):
     results = {
         "-5":0,
         "-3":0,
-        "ref":0,
+        "focused":0,
         "+3":0,
         "+5":0,
     }
     keys = images.keys()
     for key in keys:
-        images[key] = get_images(key, "phase")
+        images[key] = get_images(key, "phase")[:10]
     
     
     # print(get_images(-3, "amplitude"))
@@ -71,9 +71,9 @@ def main():
         # VarianceClarityMetric(model),
         # EnergyClarityMetric(model),
         # VollathClarityMetric(model),
-        EntropyClarityMetric(model),
-        TenengradClarityMetric(model)
-
+        # EntropyClarityMetric(model),
+        # TenengradClarityMetric(model)
+        KerasClarityMetric(model)
     ]
 
     for metric in metrics:

@@ -44,3 +44,5 @@ VollathClarityMetric unsupported operand type(s) for /: 'MicroscopeImage' and 'i
 VollathClarityMetric only length-1 arrays can be converted to Python scalars
 EntropyClarityMetric 'MicroscopeImage' object has no attribute 'shape'
 EntropyClarityMetric too many values to unpack (expected 2)
+EntropyClarityMetric [Errno 2] No such file or directory: 'data2/ref'
+EntropyClarityMetric [Errno 2] No such file or directory: 'data2/ref'
