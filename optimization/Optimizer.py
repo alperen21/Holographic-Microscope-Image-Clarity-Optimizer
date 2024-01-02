@@ -1,31 +1,37 @@
-from microscope.Microscope import DummyMicroscopeController
-from clarity.Clarity import DummyClarityMetric, LaplacianClarityMetric
+from microscope.Microscope import DummyMicroscopeController, MicroscopeController, MicroscopeImage
+from clarity.Clarity import DummyClarityMetric, LaplacianClarityMetric, LinearClarityMetric
 import cv2
 from configurations.config import config
 
 class Optimizer:
-    def __init__(self, clarity_metric, microscope_controller, lr=config["lr"]):
+    def __init__(self, clarity_metric : LinearClarityMetric, microscope_controller : MicroscopeController, lr : float =config["lr"]) -> None:
         """
-        clarity_metric: function that takes in an image and returns a clarity score
-        microscope_controller: object that controls the microscope
-        lr: learning rate
+        :param clarity_metric: function that takes in an image and returns a clarity score
+        :param microscope_controller: object that controls the microscope
+        :param lr: learning rate
         """
         self.lr = lr
         self.clarity_metric = clarity_metric
         self.microscope_controller = microscope_controller
 
-    def forward(self):
+    def forward(self) -> float:
         """
         Returns the clarity of the current image
+
+        :returns: clarity of the current image
+        :rtype: float
         """
         image = self.microscope_controller.get_image()
         clarity = self.clarity_metric(image)
         return clarity
 
         
-    def gradient(self, previous_clarity, gradient_step=config["gradient step"]):
+    def gradient(self, previous_clarity : float, gradient_step : float =config["gradient step"]) -> float:
         """
         Returns the gradient of the clarity metric with respect to the move amount
+
+        :returns: gradient of the clarity metric with respect to the move amount
+        :rtype: float
         """
         self.microscope_controller.move(gradient_step)
         image = self.microscope_controller.get_image()
@@ -48,18 +54,27 @@ class Optimizer:
         
         return grad
     
-    def convergence_check(self, previous_clarity, current_clarity):
+    def convergence_check(self, previous_clarity : float, current_clarity : float) -> bool:
         """
         Returns True if the optimizer has converged, False otherwise
+
+        :param previous_clarity: clarity of the previous image
+        :param current_clarity: clarity of the current image
+        
+        :returns: True if the optimizer has converged, False otherwise
+        :rtype: bool
         """
         if current_clarity > previous_clarity:
             return False
         else:
             return True
     
-    def start(self):
+    def start(self) -> MicroscopeImage:
         """
         Starts the optimization process
+
+        :returns: optimized image
+        :rtype: MicroscopeImage
         """
         previous_clarity = float('-inf')
         image = self.microscope_controller.get_image()

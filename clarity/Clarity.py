@@ -15,6 +15,7 @@ from torchvision.transforms.functional import convert_image_dtype
 from PIL import Image
 from tensorflow.keras.models import load_model, Model
 from configurations.config import config
+from microscope.Microscope import MicroscopeImage, DummyMicroscopeImage
 
 
 
@@ -27,25 +28,61 @@ clarity_model.load_state_dict(torch.load('clarity_model.pt'))
 
 
 class LinearClarityMetric(ABC):
+    """
+    Clarity Metric abstract class that all other clarity metrics inherit from
+    """
     def __init__(self, model_weights=config["model"], crop=config["crop"]) -> None:
+        """
+        Constructor for the LinearClarityMetric class
+
+        :model_weights: path to model weights
+        :crop: boolean that determines whether or not to crop images
+        :return: None    
+        """
         self.image_cropper = Image_Cropper(model_weights)
         self.crop_images = crop
 
-    def crop(self, image):
+    def crop(self, image : MicroscopeImage) -> list[MicroscopeImage]:
+        """
+        Method that crops an image
+
+        :image: image to be cropped
+        :return: list of cropped images
+        :rtype: list of MicroscopeImages
+        """
         if self.crop_images:
             return self.image_cropper.crop(image, "results", save=False)
         else:
             return [image]
     
     @abstractclassmethod
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Abstract method that calculates the clarity of an image
+
+        :image: image to be calculated
+        :return: clarity score
+        """
         pass 
     
     @abstractclassmethod
-    def get_max_value(self):
+    def get_max_value(self) -> float:
+        """
+        Abstract method that returns the maximum value of the clarity metric for normalization reasons
+        
+        :return: maximum value of the clarity metric
+        :rtype: float
+        """
         pass
 
-    def get_clarity(self, image):
+    def get_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Crops an image and calculates the average clarity of the image based on cropped images
+
+        :image: image which will be used to calculate the clarity
+        :return: average clarity of the image
+        :rtype: float
+        """
         crops = self.crop(image)
 
         if len(crops) == 0:
@@ -58,7 +95,14 @@ class LinearClarityMetric(ABC):
         average_clarity = clarity_score/len(crops)
         return average_clarity
 
-    def get_normalized_clarity(self, image):
+    def get_normalized_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity and normalizes it using the maximum value coming from get_max_value method
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         crops = self.crop(image)
         
         clarity_score = 0
@@ -77,11 +121,21 @@ class LinearClarityMetric(ABC):
 
 
 class KerasClarityMetric(LinearClarityMetric):
+    """
+    Clarity metric that uses the last layer of a pretrained model's activation vector to calculate the clarity of an image
+    """
     def __init__(self) -> None:
         super().__init__()
         self.model = load_model("focused_unfocused_model.h5")
     
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         image = image.get_image_tensor()
         image = cv2.resize(image, (224, 224))
         image = np.expand_dims(image, axis=0)
@@ -98,10 +152,16 @@ class KerasClarityMetric(LinearClarityMetric):
 
     
     def get_max_value(self):
+        """
+        Maximum activation is 1
+        """
         return 1
 
 
 class ConvolutionalClarityMetric(LinearClarityMetric):
+    """
+    Deprecated don't use
+    """
     def __init__(self) -> None:
         super().__init__()
         self.transform = Compose([
@@ -132,70 +192,161 @@ class LaplacianClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
 
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return Laplacian(image)
 
     def get_max_value(self):
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: float
+        """
         return 255**2
     
 class BrennerClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
 
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return brenner(image)
 
-    def get_max_value(self):
+    def get_max_value(self) -> int:
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return 255**2
 
 class SMDClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
 
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return SMD(image)
 
-    def get_max_value(self):
+    def get_max_value(self) -> int:
+        """
+        Maximum value is 255
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return 255
 
 class SMD2ClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
 
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return SMD2(image)
 
-    def get_max_value(self):
+    def get_max_value(self) -> int:
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return 255
     
 class VarianceClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
 
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return variance(image)
 
-    def get_max_value(self):
+    def get_max_value(self) -> int:
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return 255**2
 
 class EnergyClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
 
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return energy(image)
 
-    def get_max_value(self):
+    def get_max_value(self) -> int:
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return 255**2
 
 class VollathClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
 
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return Vollath(image)
 
-    def get_max_value(self):
+    def get_max_value(self) -> int:
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return 255**2
     
 
@@ -203,60 +354,146 @@ class InverseEntropyClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
 
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return -entropy(image)
 
-    def get_max_value(self):
+    def get_max_value(self) -> int:
+
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return np.log2(256)
 
 class EntropyClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
 
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return entropy(image)
 
-    def get_max_value(self):
+    def get_max_value(self) -> int:
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return np.log2(256)
 
 class TenengradClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
 
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return Tenengrad(image)
 
     def get_max_value(self):
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return 255**2
 
 class HarmonicMeanClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
     
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return harmonic_mean(image)
 
-    def get_max_value(self):
+    def get_max_value(self) -> int:
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return 1
 
 class GeometricMeanClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
     
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return geometric_mean(image)
 
     def get_max_value(self):
+
+        """
+        Maximum value is 255**2
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return 1
 
 class ArithmeticMeanClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
         super().__init__()
     
-    def calculate_clarity(self, image):
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Calculates the clarity
+
+        :image: image which will be used to calculate the clarity
+        :return: normalized clarity of the image
+        :rtype: float
+        """
         return arithmetic_mean(image)
 
     def get_max_value(self):
+        """
+        Maximum value is 1
+        
+        :return: maximum value of the clarity metric
+        :rtype: int
+        """
         return 1
 
 
@@ -452,7 +689,14 @@ def LinearClarityMetric(crops, metric_name):
         return average_clarity
 
 
-def DummyClarityMetric(img):
+def DummyClarityMetric(img : DummyMicroscopeImage) -> float:
+    """
+    Dummy clarity metric to test the optimizer, uses the focus of the image to determine the clarity
+
+    :img: image to be calculated
+    :return: clarity score
+    :rtype: float
+    """
     img_focus = img.get_focus()
     focus_to_clarity = {
         -3.0 : 10,
@@ -468,7 +712,7 @@ def DummyClarityMetric(img):
         2.0 : 11,
         2.5 : 10.5,
         3.0 : 10
-    }
+    } #infer clarity result from focus value
     return focus_to_clarity[img_focus]
 
 if __name__ == "__main__":
