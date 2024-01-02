@@ -5,11 +5,10 @@ import cv2
 from configurations.config import config
 
 def main():
-    clarityMetric = InverseEntropyClarityMetric(config["model"])
+    clarityMetric = InverseEntropyClarityMetric()
     optimizer = Optimizer(
         clarity_metric= clarityMetric,
-        microscope_controller=DummyClinicalMicroscopeController(),
-        lr=20
+        microscope_controller=DummyClinicalMicroscopeController()
     )
     optimized_image = optimizer.start()
     print("optimized image clarity:", clarityMetric(optimized_image))

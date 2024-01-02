@@ -27,7 +27,7 @@ clarity_model.load_state_dict(torch.load('clarity_model.pt'))
 
 
 class LinearClarityMetric(ABC):
-    def __init__(self, model_weights, crop=config["crop"]) -> None:
+    def __init__(self, model_weights=config["model"], crop=config["crop"]) -> None:
         self.image_cropper = Image_Cropper(model_weights)
         self.crop_images = crop
 
@@ -77,8 +77,8 @@ class LinearClarityMetric(ABC):
 
 
 class KerasClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
         self.model = load_model("focused_unfocused_model.h5")
     
     def calculate_clarity(self, image):
@@ -102,8 +102,8 @@ class KerasClarityMetric(LinearClarityMetric):
 
 
 class ConvolutionalClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
         self.transform = Compose([
             Resize((224, 224), antialias=True),
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -129,8 +129,8 @@ class ConvolutionalClarityMetric(LinearClarityMetric):
         return 10
 
 class LaplacianClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
 
     def calculate_clarity(self, image):
         return Laplacian(image)
@@ -139,8 +139,8 @@ class LaplacianClarityMetric(LinearClarityMetric):
         return 255**2
     
 class BrennerClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
 
     def calculate_clarity(self, image):
         return brenner(image)
@@ -149,8 +149,8 @@ class BrennerClarityMetric(LinearClarityMetric):
         return 255**2
 
 class SMDClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
 
     def calculate_clarity(self, image):
         return SMD(image)
@@ -159,8 +159,8 @@ class SMDClarityMetric(LinearClarityMetric):
         return 255
 
 class SMD2ClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
 
     def calculate_clarity(self, image):
         return SMD2(image)
@@ -169,8 +169,8 @@ class SMD2ClarityMetric(LinearClarityMetric):
         return 255
     
 class VarianceClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
 
     def calculate_clarity(self, image):
         return variance(image)
@@ -179,8 +179,8 @@ class VarianceClarityMetric(LinearClarityMetric):
         return 255**2
 
 class EnergyClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
 
     def calculate_clarity(self, image):
         return energy(image)
@@ -189,8 +189,8 @@ class EnergyClarityMetric(LinearClarityMetric):
         return 255**2
 
 class VollathClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
 
     def calculate_clarity(self, image):
         return Vollath(image)
@@ -200,8 +200,8 @@ class VollathClarityMetric(LinearClarityMetric):
     
 
 class InverseEntropyClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
 
     def calculate_clarity(self, image):
         return -entropy(image)
@@ -210,8 +210,8 @@ class InverseEntropyClarityMetric(LinearClarityMetric):
         return np.log2(256)
 
 class EntropyClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
 
     def calculate_clarity(self, image):
         return entropy(image)
@@ -220,8 +220,8 @@ class EntropyClarityMetric(LinearClarityMetric):
         return np.log2(256)
 
 class TenengradClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
 
     def calculate_clarity(self, image):
         return Tenengrad(image)
@@ -230,8 +230,8 @@ class TenengradClarityMetric(LinearClarityMetric):
         return 255**2
 
 class HarmonicMeanClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
     
     def calculate_clarity(self, image):
         return harmonic_mean(image)
@@ -240,8 +240,8 @@ class HarmonicMeanClarityMetric(LinearClarityMetric):
         return 1
 
 class GeometricMeanClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
     
     def calculate_clarity(self, image):
         return geometric_mean(image)
@@ -250,8 +250,8 @@ class GeometricMeanClarityMetric(LinearClarityMetric):
         return 1
 
 class ArithmeticMeanClarityMetric(LinearClarityMetric):
-    def __init__(self, model_weights) -> None:
-        super().__init__(model_weights)
+    def __init__(self) -> None:
+        super().__init__()
     
     def calculate_clarity(self, image):
         return arithmetic_mean(image)
