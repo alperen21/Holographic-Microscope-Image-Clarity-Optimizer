@@ -1,9 +1,10 @@
 from microscope.Microscope import DummyMicroscopeController
 from clarity.Clarity import DummyClarityMetric, LaplacianClarityMetric
 import cv2
+from configurations.config import config
 
 class Optimizer:
-    def __init__(self, clarity_metric, microscope_controller, lr=0.01):
+    def __init__(self, clarity_metric, microscope_controller, lr=config["lr"]):
         """
         clarity_metric: function that takes in an image and returns a clarity score
         microscope_controller: object that controls the microscope
@@ -22,24 +23,24 @@ class Optimizer:
         return clarity
 
         
-    def gradient(self, previous_clarity, move_amount=2):
+    def gradient(self, previous_clarity, gradient_step=config["gradient step"]):
         """
         Returns the gradient of the clarity metric with respect to the move amount
         """
-        self.microscope_controller.move(move_amount)
+        self.microscope_controller.move(gradient_step)
         image = self.microscope_controller.get_image()
         new_clarity = self.clarity_metric(image)
         print(previous_clarity)
         print(new_clarity)
         grad = new_clarity - previous_clarity
-        self.microscope_controller.move((-1)*move_amount)
+        self.microscope_controller.move((-1)*gradient_step)
 
         
         if new_clarity < previous_clarity:
-            self.microscope_controller.move((-1)*move_amount)
+            self.microscope_controller.move((-1)*gradient_step)
             image = self.microscope_controller.get_image()
             new_clarity_2 = self.clarity_metric(image)
-            self.microscope_controller.move(move_amount)
+            self.microscope_controller.move(gradient_step)
 
 
             if new_clarity_2 < previous_clarity:

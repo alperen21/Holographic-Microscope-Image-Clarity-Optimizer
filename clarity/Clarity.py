@@ -14,7 +14,7 @@ from torchvision.transforms import Compose, Resize, Normalize
 from torchvision.transforms.functional import convert_image_dtype
 from PIL import Image
 from tensorflow.keras.models import load_model, Model
-
+from configurations.config import config
 
 
 
@@ -27,7 +27,7 @@ clarity_model.load_state_dict(torch.load('clarity_model.pt'))
 
 
 class LinearClarityMetric(ABC):
-    def __init__(self, model_weights, crop=False) -> None:
+    def __init__(self, model_weights, crop=config["crop"]) -> None:
         self.image_cropper = Image_Cropper(model_weights)
         self.crop_images = crop
 
