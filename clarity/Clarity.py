@@ -197,6 +197,17 @@ class VollathClarityMetric(LinearClarityMetric):
 
     def get_max_value(self):
         return 255**2
+    
+
+class InverseEntropyClarityMetric(LinearClarityMetric):
+    def __init__(self, model_weights) -> None:
+        super().__init__(model_weights)
+
+    def calculate_clarity(self, image):
+        return -entropy(image)
+
+    def get_max_value(self):
+        return np.log2(256)
 
 class EntropyClarityMetric(LinearClarityMetric):
     def __init__(self, model_weights) -> None:

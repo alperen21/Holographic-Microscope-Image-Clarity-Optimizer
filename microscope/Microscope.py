@@ -177,9 +177,7 @@ class DummyClinicalMicroscopeController(MicroscopeController):
 
         if int(focus) > 0:
             focus = "+" + focus
-        elif int(focus) < 0:
-            focus = "-" + focus
-        else:
+        elif int(focus) == 0:
             focus = self.reference_token
         
         if self.is_move_legal(move_amount):
@@ -192,10 +190,10 @@ class DummyClinicalMicroscopeController(MicroscopeController):
             raise Exception("Move is not legal")
 
     def is_move_legal(self, move_amount):
-        if self.image_idx + move_amount < 0 or self.image_idx + move_amount >= len(self.image_focuses):
-            return False
-        else:
-            return True
+        return True
+    
+    def get_current_focus(self):
+        return self.image_focuses[self.image_idx]
 
 if __name__ == "__main__":
     controller = DummyMicroscopeController()

@@ -22,13 +22,14 @@ class Optimizer:
         return clarity
 
         
-    def gradient(self, previous_clarity, move_amount=0.5):
+    def gradient(self, previous_clarity, move_amount=2):
         """
         Returns the gradient of the clarity metric with respect to the move amount
         """
         self.microscope_controller.move(move_amount)
         image = self.microscope_controller.get_image()
         new_clarity = self.clarity_metric(image)
+        print(previous_clarity)
         print(new_clarity)
         grad = new_clarity - previous_clarity
         self.microscope_controller.move((-1)*move_amount)

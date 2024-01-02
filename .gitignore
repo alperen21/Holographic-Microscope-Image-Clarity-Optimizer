@@ -1,4 +1,4 @@
-*h5
+*.h5
 focused_unfocused_model.h5
 data/*
 data*/*
