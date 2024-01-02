@@ -139,6 +139,64 @@ class RestMicroscopeController(MicroscopeController):
         return self.height + move_amount <= self.up_limit and self.height + move_amount >= self.low_limit
 
 
+class DummyClinicalMicroscopeController(MicroscopeController):
+    
+    def __init__(self, start_token="534", end_token="_phase.png", reference_token="ref", folder="clinical_images") -> None:
+        super().__init__()
+        self.start_token = start_token
+        self.end_token = end_token
+        self.folder = folder
+        self.reference_token = reference_token
+
+
+        self.image_focuses = [
+            "+5",
+            "+3",
+            "ref",
+            "-3",
+            "-5"
+        ]
+        self.image_idx = random.randint(1, len(self.image_focuses)-2) #important this should not start with either of the extremes
+        self.image = MicroscopeImage(
+            img_url=self.get_image_path()
+        )
+
+    def get_image_path(self):
+        return os.path.join(self.folder, f"{self.start_token}_{121-int(0 if self.image_focuses[self.image_idx] == self.reference_token else self.image_focuses[self.image_idx])}_{self.image_focuses[self.image_idx]}{self.end_token}")
+
+    def get_image(self):
+        return self.image
+    
+    def move(self, move_amount):
+        move_amount = int(super().discretize_move(move_amount))
+
+        focus = str(int(0 if self.image_focuses[self.image_idx] == self.reference_token else self.image_focuses[self.image_idx]) + move_amount)
+        focuses = self.image_focuses.copy()
+        focuses[focuses.index(self.reference_token)] = "0"
+        focus = str(min([int(focus) for focus in focuses], key=lambda x: abs(x - int(focus))))
+
+        if int(focus) > 0:
+            focus = "+" + focus
+        elif int(focus) < 0:
+            focus = "-" + focus
+        else:
+            focus = self.reference_token
+        
+        if self.is_move_legal(move_amount):
+            new_focus = focus
+            self.image_idx = self.image_focuses.index(new_focus)
+            self.image = MicroscopeImage(
+                img_url=self.get_image_path()
+            )
+        else:
+            raise Exception("Move is not legal")
+
+    def is_move_legal(self, move_amount):
+        if self.image_idx + move_amount < 0 or self.image_idx + move_amount >= len(self.image_focuses):
+            return False
+        else:
+            return True
+
 if __name__ == "__main__":
     controller = DummyMicroscopeController()
 
