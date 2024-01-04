@@ -3,6 +3,8 @@ from clarity.Clarity import DummyClarityMetric, LaplacianClarityMetric, LinearCl
 import cv2
 from configurations.config import config
 
+
+convergence_trials = 0
 class Optimizer:
     def __init__(self, clarity_metric : LinearClarityMetric, microscope_controller : MicroscopeController, lr : float =config["lr"]) -> None:
         """
@@ -64,6 +66,12 @@ class Optimizer:
         :returns: True if the optimizer has converged, False otherwise
         :rtype: bool
         """
+        global convergence_trials
+        convergence_trials += 1
+
+        if convergence_trials > config["max convergence trials"]:
+            return True
+
         if current_clarity > previous_clarity:
             return False
         else:
