@@ -85,8 +85,8 @@ class LinearClarityMetric(ABC):
         """
         crops = self.crop(image)
 
-        if len(crops) == 0:
-            return 0
+        while len(crops) == 0:
+            crops = self.crop(image)
         
         clarity_score = 0
         for crop in crops:
