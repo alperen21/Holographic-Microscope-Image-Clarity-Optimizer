@@ -5,6 +5,6 @@ config = {
     "crop": True,
     "model": "24_10_23_yolov8x_no_aug_iou_0.7.pt",
     "max convergence trials":3,
-    "inference clarity metric model": "full_model.pt"
+    "inference clarity metric model": "pruned_model.pt"
 }
 

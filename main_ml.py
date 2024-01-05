@@ -1,11 +1,11 @@
-from optimization.Optimizer import Optimizer
+from optimization.Optimizer import GradOptimizer
 from clarity.Clarity import InferenceClarityMetric
 from microscope.Microscope import DummyClinicalMicroscopeController
 import cv2
 
 def main():
     clarityMetric = InferenceClarityMetric("24_10_23_yolov8x_no_aug_iou_0.7.pt")
-    optimizer = Optimizer(
+    optimizer = GradOptimizer(
         clarity_metric= clarityMetric,
         microscope_controller=DummyClinicalMicroscopeController(),
         lr=1

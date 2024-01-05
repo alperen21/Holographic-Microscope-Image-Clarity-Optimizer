@@ -139,6 +139,36 @@ class InferenceClarityMetric(LinearClarityMetric):
 
         inference = float(self.model(image_tensor.unsqueeze(0))[0])
         return -abs(inference)
+    
+class PlaneInferenceClarityMetric(LinearClarityMetric):
+    model = torch.load(config["inference clarity metric model"])
+
+    def __init__(self, model_weights=config["model"], crop=config["crop"]) -> None:
+        super().__init__(model_weights, crop)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.eval()
+        self.model.to(device)
+
+        self.transform = transforms.Compose([
+                transforms.Resize((256, 256)),  # Resize images to 256x256
+                transforms.ToTensor(),          # Convert images to PyTorch tensors
+            ])
+
+    def calculate_clarity(self, image : MicroscopeImage) -> float:
+        """
+        Abstract method that calculates the clarity of an image
+
+        :image: image to be calculated
+        :return: clarity score
+        """
+        # image_tensor = self.transform(image.get_image_tensor())
+        image_tensor = image.get_image_tensor()
+        image_tensor = cv2.cvtColor(image_tensor, cv2.COLOR_BGR2RGB)
+        image_tensor = Image.fromarray(image_tensor)
+        image_tensor = self.transform(image_tensor)
+
+        inference = float(self.model(image_tensor.unsqueeze(0))[0])
+        return inference
 
     def get_max_value(self) -> float:
         """

@@ -36,7 +36,13 @@ Crops cells out of the image. Cells that are not fully captured by the microscop
 Contains microscope controllers including dummy micrscope controllers for demonstration purposes and a Rest Api microscope controller to communicate with the actuator of the microscope using http requests
 
 ### Optimization
-The optimizer class implements the gradient ascent algorithm
+The optimizers utilize certain algorithms to find the optimal distance of the actuator.
+
+#### GradOptimizer
+Grad optimizer utilizes gradient ascent algorithm to optimize the distance
+
+#### RapidOptimizer
+Rapid optimizer uses inference from ResNet18 to predict how far away the actuator is from the optimal focal point and moves the actuator appropriately. This algorithm is especially useful when quick autofocus is required.
 
 ### Configuration
 Contains configurations:

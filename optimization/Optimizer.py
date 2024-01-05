@@ -1,11 +1,56 @@
 from microscope.Microscope import DummyMicroscopeController, MicroscopeController, MicroscopeImage
-from clarity.Clarity import DummyClarityMetric, LaplacianClarityMetric, LinearClarityMetric
-import cv2
+from clarity.Clarity import LinearClarityMetric, PlaneInferenceClarityMetric
+from abc import ABC, abstractclassmethod
 from configurations.config import config
 
 
-convergence_trials = 0
-class Optimizer:
+class Optimizer(ABC):
+    @abstractclassmethod
+    def start(self) -> MicroscopeImage:
+        """
+        Starts the optimization process
+
+        :returns: optimized image
+        :rtype: MicroscopeImage
+        """
+        pass
+
+class RapidOptimizer(Optimizer):
+    """
+    Rapid optimizer uses inference from ResNet18 to predict how far away the actuator is from the optimal focal point and moves the actuator appropriately. 
+    This class is especially useful when quick autofocus is required.
+    """
+    def __init__(self, microscope_controller : MicroscopeController) -> None:
+        """
+        :param clarity_metric: function that takes in an image and returns a clarity score
+        :param microscope_controller: object that controls the microscope
+        :param lr: learning rate
+        """
+        self.clarity_metric = PlaneInferenceClarityMetric(config["model"])
+        self.microscope_controller = microscope_controller
+
+    def start(self) -> MicroscopeImage:
+        """
+        Starts the optimization process
+
+        :returns: optimized image
+        :rtype: MicroscopeImage
+        """
+        image = self.microscope_controller.get_image()
+        print("image focus:", self.microscope_controller.get_current_focus())
+
+        inference = self.clarity_metric(image)
+        self.microscope_controller.move(-inference)
+
+        print("inference:", inference)
+        print("image focus after optimization:", self.microscope_controller.get_current_focus())
+        
+
+        return self.microscope_controller.get_image()
+        
+
+class GradOptimizer:
+    convergence_trials = 0
     def __init__(self, clarity_metric : LinearClarityMetric, microscope_controller : MicroscopeController, lr : float =config["lr"]) -> None:
         """
         :param clarity_metric: function that takes in an image and returns a clarity score
@@ -66,10 +111,9 @@ class Optimizer:
         :returns: True if the optimizer has converged, False otherwise
         :rtype: bool
         """
-        global convergence_trials
-        convergence_trials += 1
+        self.convergence_trials += 1
 
-        if convergence_trials > config["max convergence trials"]:
+        if self.convergence_trials > config["max convergence trials"]:
             return True
 
         if current_clarity > previous_clarity:
@@ -109,19 +153,7 @@ class Optimizer:
         print("clarity:", current_clarity)
         return self.microscope_controller.get_image()
     
-def main():
-    laplacianClarityMetric = LaplacianClarityMetric(model_weights="yolov8n.pt")
-    optimizer = Optimizer(
-        clarity_metric=laplacianClarityMetric,
-        microscope_controller=DummyMicroscopeController(),
-        lr=1
-    )
-    optimized_image = optimizer.start()
-    cv2.imshow("optimized image", optimized_image)
-    cv2.waitKey(0)
 
-if __name__ == "__main__":
-    main()
         
         
 
