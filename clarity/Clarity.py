@@ -4,28 +4,19 @@ import os
 import numpy as np
 from scipy.stats import hmean,gmean
 import math
+from PIL import Image
 from multiprocessing import Pool
 from abc import ABC, abstractclassmethod
 from cropping.Cropping import Image_Cropper
+from torchvision import transforms
 import torch
 import torchvision.models as models
 import torch.nn as nn
 from torchvision.transforms import Compose, Resize, Normalize
 from torchvision.transforms.functional import convert_image_dtype
 from PIL import Image
-from tensorflow.keras.models import load_model, Model
 from configurations.config import config
 from microscope.Microscope import MicroscopeImage, DummyMicroscopeImage
-
-
-
-clarity_model = models.resnet18(pretrained=False)
-# Modify the last fully connected layer for your specific task
-num_ftrs = clarity_model.fc.in_features
-clarity_model.fc = nn.Linear(num_ftrs, 1)  # Assuming the output feature size is 1
-
-clarity_model.load_state_dict(torch.load('clarity_model.pt'))
-
 
 class LinearClarityMetric(ABC):
     """
@@ -119,74 +110,47 @@ class LinearClarityMetric(ABC):
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         return self.get_clarity(*args, **kwds)
 
+class InferenceClarityMetric(LinearClarityMetric):
+    model = torch.load(config["inference clarity metric model"])
 
-class KerasClarityMetric(LinearClarityMetric):
-    """
-    Clarity metric that uses the last layer of a pretrained model's activation vector to calculate the clarity of an image
-    """
-    def __init__(self) -> None:
-        super().__init__()
-        self.model = load_model("focused_unfocused_model.h5")
-    
+    def __init__(self, model_weights=config["model"], crop=config["crop"]) -> None:
+        super().__init__(model_weights, crop)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.eval()
+        self.model.to(device)
+
+        self.transform = transforms.Compose([
+                transforms.Resize((256, 256)),  # Resize images to 256x256
+                transforms.ToTensor(),          # Convert images to PyTorch tensors
+            ])
+
     def calculate_clarity(self, image : MicroscopeImage) -> float:
         """
-        Calculates the clarity
+        Abstract method that calculates the clarity of an image
 
-        :image: image which will be used to calculate the clarity
-        :return: normalized clarity of the image
+        :image: image to be calculated
+        :return: clarity score
+        """
+        # image_tensor = self.transform(image.get_image_tensor())
+        image_tensor = image.get_image_tensor()
+        image_tensor = cv2.cvtColor(image_tensor, cv2.COLOR_BGR2RGB)
+        image_tensor = Image.fromarray(image_tensor)
+        image_tensor = self.transform(image_tensor)
+
+        inference = float(self.model(image_tensor.unsqueeze(0))[0])
+        return -abs(inference)
+
+    def get_max_value(self) -> float:
+        """
+        Abstract method that returns the maximum value of the clarity metric for normalization reasons
+        
+        :return: maximum value of the clarity metric
         :rtype: float
         """
-        image = image.get_image_tensor()
-        image = cv2.resize(image, (224, 224))
-        image = np.expand_dims(image, axis=0)
-        image = image / 255.0
+        return 5.0
 
 
-        layer_name = self.model.layers[-1].name  # Name of the last layer
-        intermediate_model = Model(inputs=self.model.input, outputs=self.model.get_layer(layer_name).output)
-        activations = intermediate_model.predict(image)
 
-        first_values = activations[:, 0] 
-
-        return first_values[0]
-
-    
-    def get_max_value(self):
-        """
-        Maximum activation is 1
-        """
-        return 1
-
-
-class ConvolutionalClarityMetric(LinearClarityMetric):
-    """
-    Deprecated don't use
-    """
-    def __init__(self) -> None:
-        super().__init__()
-        self.transform = Compose([
-            Resize((224, 224), antialias=True),
-            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
-
-    def calculate_clarity(self, image):
-        global clarity_model
-        image = image.get_image_tensor()
-        if len(image.shape) == 2:
-            # Add a channel dimension (HxW -> HxWx1)
-            image = np.expand_dims(image, axis=2)
-            image = np.repeat(image, 3, axis=2)
-        image = torch.from_numpy(image).permute(2, 0, 1)  
-        image = convert_image_dtype(image, dtype=torch.float32)
-
-        # image = convert_image_dtype(image, dtype=torch.float)
-        image = self.transform(image)
-        image = image.unsqueeze(0)  # Add a batch dimension
-
-        return clarity_model(image)
-
-    def get_max_value(self):
-        return 10
 
 class LaplacianClarityMetric(LinearClarityMetric):
     def __init__(self) -> None:
