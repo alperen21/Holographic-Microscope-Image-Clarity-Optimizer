@@ -58,6 +58,70 @@ class MicroscopeController(ABC):
         num_steps = math.ceil(move_amount / self.step_size)
         return num_steps * self.step_size
 
+class DummyMultiFocusMicroscopeController(MicroscopeController):
+    def __init__(self, discrete_move=True, step_size=1) -> None:
+        super().__init__(discrete_move, step_size)
+        self.image_focuses = ["ref" + str(focus) if focus <= 0 else "ref+" + str(focus) for focus in range(-5, 5)] # all images focuses gathered from the experiment
+        self.image_focuses = [elem for elem in self.image_focuses if elem != "ref0"] + ["ref"]  # to replace ref0 with just ref
+
+        self.current_focus = random.choice(self.image_focuses[1:-1]) # to seelct a random focus that is not on the either edge
+        self.image_dictionary = self.init_image_dictinary() # image dictionary is a dictionary that has images focuses as keys and paths of images belonging to the focus plane as values (list of paths)
+
+
+    def init_image_dictinary(self):
+        """
+        Initializes the image dictionary
+        which contains the paths of images with with focus as the key
+        """
+        folder_path = 'focus_experiment'
+
+        # Define the image file extensions
+        image_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.bmp'}
+
+        # List to store paths of images
+        image_dictionary = dict()
+        for image_focus in self.image_focuses:
+            image_dictionary[image_focus] = list()
+
+            # Iterate through all files in the folder
+            for file in os.listdir(os.path.join(folder_path, image_focus)):
+                # Check if the file has an image extension and add it to the list
+                if os.path.splitext(file)[1].lower() in image_extensions:
+                    image_dictionary[image_focus].append(os.path.join(folder_path, file))
+
+        return image_dictionary
+    
+    def get_current_focus(self):
+        """
+        Returns the current focus plane
+        """
+        return self.current_focus
+    
+    def get_image_path(self) -> str:
+        """
+        Each time randomly selects an image from the appropriate focus plane so that the real time flux within the microscope is also simulated
+        """
+        images = self.image_dictionary[self.current_focus]
+        return random.choice(images)
+    
+    def move(self, move_amount : float) -> int:
+        """
+        Discretizes the move and moves the dummy actuator by the move amount
+        """
+        move_amount = super().discretize_move(move_amount)
+        if self.is_move_legal(move_amount):
+            new_focus = self.image_focuses[self.image_focuses.index(self.current_focus) + int(move_amount)]
+            self.current_focus = new_focus
+        else:
+            raise Exception("Move is not legal")
+    
+    def is_move_legal(self, move_amount : float) -> bool:
+        """
+        Checks if the move is legal given the current position of the actuator and the prospective move amount
+        """
+        return self.image_focuses.index(self.current_focus) + move_amount < len(self.image_focuses) and self.image_focuses.index(self.current_focus) + move_amount >= 0
+    
+
 class DummyMicroscopeController(MicroscopeController):
     def __init__(self, token="haydarpasa", folder="dummy_images") -> None:
         super().__init__()
