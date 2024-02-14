@@ -1,3 +1,5 @@
+focus_experiment/*
+*.png
 *.h5
 focused_unfocused_model.h5
 data/*

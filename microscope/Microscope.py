@@ -61,7 +61,7 @@ class MicroscopeController(ABC):
 class DummyMultiFocusMicroscopeController(MicroscopeController):
     def __init__(self, discrete_move=True, step_size=1) -> None:
         super().__init__(discrete_move, step_size)
-        self.image_focuses = ["ref" + str(focus) if focus <= 0 else "ref+" + str(focus) for focus in range(-5, 5)] # all images focuses gathered from the experiment
+        self.image_focuses = ["ref" + str(focus) if focus <= 0 else "ref+" + str(focus) for focus in range(-3, 3)] # all images focuses gathered from the experiment
         self.image_focuses = [elem for elem in self.image_focuses if elem != "ref0"] + ["ref"]  # to replace ref0 with just ref
 
         self.current_focus = random.choice(self.image_focuses[1:-1]) # to seelct a random focus that is not on the either edge
@@ -87,7 +87,7 @@ class DummyMultiFocusMicroscopeController(MicroscopeController):
             for file in os.listdir(os.path.join(folder_path, image_focus)):
                 # Check if the file has an image extension and add it to the list
                 if os.path.splitext(file)[1].lower() in image_extensions:
-                    image_dictionary[image_focus].append(os.path.join(folder_path, file))
+                    image_dictionary[image_focus].append(os.path.join(folder_path, image_focus, file))
 
         return image_dictionary
     
@@ -121,6 +121,11 @@ class DummyMultiFocusMicroscopeController(MicroscopeController):
         """
         return self.image_focuses.index(self.current_focus) + move_amount < len(self.image_focuses) and self.image_focuses.index(self.current_focus) + move_amount >= 0
     
+    def get_image(self):
+        return DummyMicroscopeImage(
+            img_focus=self.current_focus,
+            img_url=self.get_image_path()
+        )
 
 class DummyMicroscopeController(MicroscopeController):
     def __init__(self, token="haydarpasa", folder="dummy_images") -> None:
@@ -378,15 +383,5 @@ class DummyClinicalMicroscopeController(MicroscopeController):
         """
         return self.image_focuses[self.image_idx]
 
-if __name__ == "__main__":
-    controller = DummyMicroscopeController()
-
-    for i in range(13):
-        controller.image_idx = i
-        print(controller.get_image_path())
-
-    
-    
-    
 
 
